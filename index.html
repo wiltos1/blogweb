@@ -22,7 +22,11 @@
       <div class="search-row">
         <div class="search">
           <span class="icon">&#128269;</span>
-          <input id="searchInput" type="search" placeholder="Search by title, date, person, city..." autocomplete="off">
+          <input id="searchInput" type="search" placeholder="AI search posts..." autocomplete="off">
+        </div>
+        <div class="inline-actions ai-actions">
+          <input id="aiResultCount" type="number" min="1" max="50" value="10" aria-label="Result count">
+          <button id="aiSearchBtn" class="pill primary">AI search</button>
         </div>
         <button id="randomBtn" class="pill accent">Surprise Me</button>
         <a class="pill ghost" href="./slideshow.html">🎞️ Slideshow Builder</a>
@@ -33,6 +37,7 @@
           <span class="switch-label">Timeline mode</span>
         </label>
       </div>
+      <div id="aiStatus" class="form-hint"></div>
     </header>
 
     <div class="layout">

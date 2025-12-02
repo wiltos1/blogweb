@@ -22,11 +22,16 @@
       <div class="search-row">
         <div class="search">
           <span class="icon">&#128269;</span>
-          <input id="searchInput" type="search" placeholder="Search posts..." autocomplete="off">
+          <input id="searchInput" type="search" placeholder="AI search posts..." autocomplete="off">
+        </div>
+        <div class="inline-actions ai-actions">
+          <input id="aiResultCount" type="number" min="1" max="50" value="10" aria-label="Result count">
+          <button id="aiSearchBtn" class="pill primary small">AI search</button>
         </div>
         <a class="pill ghost" href="./index.html">&#127968; Home</a>
         <a class="pill ghost" href="./map.html">Map</a>
       </div>
+      <div id="aiStatus" class="form-hint"></div>
     </header>
 
     <main class="builder-shell">

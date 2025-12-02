@@ -1284,3 +1284,12 @@ select[multiple]::-webkit-scrollbar-thumb {
   min-width: 180px;
   flex: 1;
 }
+
+.ai-actions input[type="number"] {
+  width: 80px;
+}
+
+.ai-actions .pill:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

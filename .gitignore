@@ -1,0 +1,17 @@
+# Ignore secrets
+secrets.json
+
+# Ignore Python virtual environments
+venv/
+.env/
+
+# Ignore compiled files
+__pycache__/
+*.pyc
+
+# Ignore SQLite databases
+*.db
+
+# Ignore OS files
+.DS_Store
+Thumbs.db

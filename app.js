@@ -20,9 +20,12 @@ const state = {
   bookmarks: new Set(),
   customFilters: [],
   customFilter: null,
+  aiResults: [],
+  openAIKey: '',
 };
 
 const CUSTOM_FILTER_KEY = 'memoryExplorer.customFilters.v1';
+const SECRETS_PATH = './secrets.json';
 
 let els = {};
 
@@ -32,6 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   els = {
     searchInput: document.getElementById('searchInput'),
+    aiSearchBtn: document.getElementById('aiSearchBtn'),
+    aiResultCount: document.getElementById('aiResultCount'),
+    aiStatus: document.getElementById('aiStatus'),
     randomBtn: document.getElementById('randomBtn'),
     timelineToggle: document.getElementById('timelineToggle'),
     yearFilter: document.getElementById('yearFilter'),
@@ -94,6 +100,7 @@ async function init() {
   parseQueryParams();
   loadBookmarks();
   loadCustomFilters();
+  loadOpenAIKey();
   bindEvents();
   await loadPosts();
   hydrateFilters();
@@ -104,10 +111,10 @@ async function init() {
 function bindEvents() {
   const on = (el, evt, handler) => el?.addEventListener?.(evt, handler);
 
-  on(els.searchInput, 'input', (e) => {
-    state.filter.search = e.target.value.toLowerCase();
-    applyFilters();
+  on(els.searchInput, 'keydown', (e) => {
+    if (e.key === 'Enter') runAISearch();
   });
+  on(els.aiSearchBtn, 'click', runAISearch);
 
   on(els.randomBtn, 'click', openRandomPost);
   on(els.homeBtn, 'click', showHome);
@@ -266,10 +273,17 @@ function fillSelect(selectEl, items, labelAll = null, multi = false) {
 
 function applyFilters() {
   state.quickViewLimit = 60;
-  const { search, favoritesOnly } = state.filter;
+  const { favoritesOnly } = state.filter;
   const criteria = buildActiveCriteria();
-  state.filtered = state.posts.filter((post) => {
-    const matchesSearch = !search || buildSearchString(post).includes(search);
+  const searchTerm = state.aiResults.length ? '' : (state.filter.search || '');
+  const baseList = state.aiResults.length
+    ? state.aiResults
+        .map((id) => state.posts.find((p) => p.url === id))
+        .filter(Boolean)
+    : [...state.posts];
+
+  state.filtered = baseList.filter((post) => {
+    const matchesSearch = !searchTerm || buildSearchString(post).includes(searchTerm);
     const matchesYear =
       !criteria.years.length || criteria.years.some((yr) => (post.date || '').startsWith(yr));
     const matchesCity = !criteria.cities.length || criteria.cities.includes(post.location_city);
@@ -600,6 +614,7 @@ function buildSearchString(post) {
 function resetFilters() {
   state.filter = { search: '', year: 'all', persons: [], city: 'all', event: 'all', favoritesOnly: false };
   state.customFilter = null;
+  state.aiResults = [];
   els.searchInput.value = '';
   els.yearFilter.value = 'all';
   els.cityFilter.value = 'all';
@@ -612,6 +627,7 @@ function resetFilters() {
   els.bookmarkFilter.textContent = 'Show favorites';
   if (els.customFilterSelect) els.customFilterSelect.value = '';
   updateCustomFilterMeta();
+  setAiStatus('');
 }
 
 function loadBookmarks() {
@@ -761,6 +777,7 @@ function applyCustomFilterByName(name) {
     return;
   }
   state.customFilter = filter;
+  state.aiResults = [];
   // Reset basic controls so UI doesn't conflict with custom filter criteria.
   state.filter = { ...state.filter, year: 'all', city: 'all', event: 'all', persons: [] };
   if (els.yearFilter) els.yearFilter.value = 'all';
@@ -781,6 +798,151 @@ function updateCustomFilterMeta(message) {
     els.customFilterMeta.textContent = `Using: ${state.customFilter.name} (${describeFilter(state.customFilter)})`;
   } else {
     els.customFilterMeta.textContent = 'No custom filter applied.';
+  }
+}
+
+function setAiStatus(msg) {
+  if (!els.aiStatus) return;
+  els.aiStatus.textContent = msg || '';
+}
+
+function setAiLoading(isLoading) {
+  if (els.aiSearchBtn) {
+    els.aiSearchBtn.disabled = isLoading;
+    els.aiSearchBtn.textContent = isLoading ? 'Searching...' : 'AI search';
+  }
+}
+
+function loadOpenAIKey() {
+  if (state.openAIKey) return;
+  fetch(SECRETS_PATH)
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      const key = data?.openai_api_key || data?.openaiKey || '';
+      if (key) {
+        state.openAIKey = key;
+        localStorage.setItem('memoryExplorer.openaiKey', key);
+      }
+    })
+    .catch(() => {
+      /* ignore */
+    });
+}
+
+function getOpenAIKey() {
+  return (
+    state.openAIKey ||
+    window.OPENAI_API_KEY ||
+    localStorage.getItem('memoryExplorer.openaiKey') ||
+    ''
+  );
+}
+
+function buildAICandidates(query) {
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const scorePost = (post) => {
+    const haystack = buildSearchString(post).toLowerCase();
+    let score = 0;
+    terms.forEach((t) => {
+      if (haystack.includes(t)) score += 2;
+      score += (haystack.match(new RegExp(t, 'g')) || []).length;
+    });
+    return score + (post.people?.length || 0) * 0.1 + (post.events?.length || 0) * 0.1;
+  };
+  return state.posts
+    .map((p) => ({ post: p, score: scorePost(p) }))
+    .sort((a, b) => b.score - a.score);
+}
+
+function trimSnippet(post, limit = 400) {
+  const text = (post.content || post.content_text || '').replace(/\s+/g, ' ').trim();
+  return text.slice(0, limit);
+}
+
+async function runAISearch() {
+  const query = (els.searchInput?.value || '').trim();
+  const topN = Math.max(1, Math.min(50, parseInt(els.aiResultCount?.value || '10', 10) || 10));
+  if (!query) {
+    setAiStatus('Enter a search to run AI search.');
+    return;
+  }
+  const key = getOpenAIKey();
+  if (!key) {
+    setAiStatus('Add your OpenAI API key in secrets.json or localStorage as memoryExplorer.openaiKey.');
+    return;
+  }
+
+  setAiLoading(true);
+  setAiStatus('AI search loading...');
+
+  const scored = buildAICandidates(query);
+  const candidates = scored.slice(0, 25).map(({ post }) => ({
+    id: post.url,
+    title: post.title,
+    date: post.date,
+    city: post.location_city,
+    people: post.people || [],
+    events: post.events || [],
+    snippet: trimSnippet(post),
+  }));
+
+  if (!candidates.length) {
+    setAiStatus('No content to search.');
+    return;
+  }
+
+  try {
+    const ids = await callOpenAIForRanking(key, query, candidates, topN);
+    const fallback = candidates.map((c) => c.id);
+    const orderedIds = (ids && ids.length ? ids : fallback).slice(0, topN);
+    state.aiResults = orderedIds;
+    state.customFilter = null;
+    if (els.customFilterSelect) els.customFilterSelect.value = '';
+    updateCustomFilterMeta();
+    applyFilters();
+    setAiStatus(`AI search applied ${orderedIds.length} results.`);
+  } catch (err) {
+    console.error(err);
+    setAiStatus('AI search failed; showing local best matches.');
+    const fallback = candidates.slice(0, topN).map((c) => c.id);
+    state.aiResults = fallback;
+    applyFilters();
+  }
+  setAiLoading(false);
+}
+
+async function callOpenAIForRanking(key, query, candidates, topN) {
+  const system = `You are a ranking helper. Given a search query and a list of candidate posts, return a JSON object with an array "ids" of up to ${topN} post ids (the provided id field) sorted from most to least relevant. Only return JSON.`;
+  const user = {
+    query,
+    top_n: topN,
+    candidates,
+  };
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${key}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: JSON.stringify(user) },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error(`OpenAI error ${res.status}`);
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) return [];
+  try {
+    const parsed = JSON.parse(content);
+    return parsed.ids || [];
+  } catch {
+    return [];
   }
 }
 
