@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Blog Memory Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="app" class="page">
+    <header class="top-bar glass">
+      <div class="brand">
+        <div class="brand-mark">ME</div>
+        <div>
+          <div class="eyebrow">Family Blog</div>
+          <div class="title">Memory Explorer</div>
+        </div>
+      </div>
+      <div class="search-row">
+        <div class="search">
+          <span class="icon">&#128269;</span>
+          <input id="searchInput" type="search" placeholder="Search by title, date, person, city..." autocomplete="off">
+        </div>
+        <button id="randomBtn" class="pill accent">Surprise Me</button>
+        <a class="pill ghost" href="./slideshow.html">🎞️ Slideshow Builder</a>
+        <a class="pill ghost" href="./map.html">🗺️ Map View</a>
+        <label class="switch">
+          <input id="timelineToggle" type="checkbox">
+          <span class="slider"></span>
+          <span class="switch-label">Timeline mode</span>
+        </label>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar glass">
+        <div class="section">
+          <div class="section-title">Filters</div>
+          <div class="field">
+            <label for="yearFilter">Year</label>
+            <select id="yearFilter"></select>
+          </div>
+          <div class="field">
+            <label for="personFilter">Person</label>
+            <select id="personFilter" multiple size="6"></select>
+          </div>
+          <div class="field">
+            <label for="cityFilter">City</label>
+            <select id="cityFilter"></select>
+          </div>
+          <div class="field">
+            <label for="eventFilter">Event</label>
+            <select id="eventFilter"></select>
+          </div>
+          <div class="filter-actions">
+            <button id="clearFilters" class="pill ghost">Clear</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Bookmarks</div>
+          <div id="bookmarksList" class="bookmark-list empty">No favorites yet</div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <div id="homeView">
+          <section class="hero glass">
+            <div>
+              <div class="eyebrow">Curate & relive</div>
+              <h1>Every memory in one beautiful place</h1>
+              <p class="lead">Browse, search, and filter through the family archive. Open a post to see every photo and note.</p>
+              <div class="hero-actions">
+                <button id="openLatest" class="pill primary">Open latest</button>
+                <button id="bookmarkFilter" class="pill ghost">Show favorites</button>
+                <button id="clearFiltersTop" class="pill ghost">Clear filters</button>
+              </div>
+            </div>
+            <div class="metrics">
+              <div class="metric">
+                <div class="metric-value" id="postCount">0</div>
+                <div class="metric-label">Posts</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value" id="peopleCount">0</div>
+                <div class="metric-label">People</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value" id="cityCount">0</div>
+                <div class="metric-label">Cities</div>
+              </div>
+            </div>
+          </section>
+
+          <section id="quickViewGrid" class="grid"></section>
+        <section id="timelineView" class="timeline hidden"></section>
+          <div class="home-actions">
+            <button id="loadMore" class="pill primary">Load More</button>
+            <button id="backTop" class="pill ghost">Back to Top</button>
+          </div>
+        </div>
+
+        <section id="postDetail" class="post-detail glass hidden">
+          <div class="post-header">
+            <div>
+              <div class="eyebrow" id="postDate"></div>
+              <h2 id="postTitle">Pick a post to explore</h2>
+              <div class="tag-row" id="postTags"></div>
+            </div>
+            <div class="post-actions">
+              <button id="homeBtn" class="pill ghost">&lt;- Back</button>
+              <button id="mapBackBtn" class="pill ghost hidden">Back to Map</button>
+              <button id="bookmarkBtn" class="pill ghost">Bookmark</button>
+              <button id="viewOriginal" class="pill">Open original</button>
+            </div>
+          </div>
+          <div id="postContent" class="post-content"></div>
+          <div id="slideshow" class="slideshow hidden">
+            <div class="slideshow-frame">
+              <img id="slideshowImage" alt="Slideshow image">
+              <div class="slideshow-caption" id="slideshowCaption"></div>
+            </div>
+            <div class="slideshow-controls">
+              <button id="prevSlide" class="pill ghost">Prev</button>
+              <div class="dots" id="slideDots"></div>
+              <button id="nextSlide" class="pill ghost">Next</button>
+            </div>
+          </div>
+          <div class="post-footer-actions">
+            <button id="homeBtnBottom" class="pill ghost">&lt;- Back</button>
+            <button id="mapBackBtnBottom" class="pill ghost hidden">Back to Map</button>
+            <button id="backTopDetail" class="pill ghost">Back to Top</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

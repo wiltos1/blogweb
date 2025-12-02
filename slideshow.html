@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Explorer — Slideshow Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="page slideshow-page">
+    <header class="top-bar glass">
+      <div class="brand">
+        <div class="brand-mark">ME</div>
+        <div>
+          <div class="eyebrow">Family Blog</div>
+          <div class="title">Slideshow Builder</div>
+        </div>
+      </div>
+      <div class="search-row">
+        <div class="search">
+          <span class="icon">&#128269;</span>
+          <input id="searchInput" type="search" placeholder="Search posts..." autocomplete="off">
+        </div>
+        <a class="pill ghost" href="./index.html">&#127968; Home</a>
+        <a class="pill ghost" href="./map.html">Map</a>
+      </div>
+    </header>
+
+    <main class="builder-shell">
+      <aside class="builder-panel glass">
+        <div class="panel-top">
+          <button id="addAllBtn" class="pill accent small">Add all results</button>
+          <button id="addRandomBtn" class="pill ghost small">Choose 5 random</button>
+        </div>
+        <details class="filter-drawer" open>
+          <summary>Filters</summary>
+          <div class="drawer-body">
+            <div class="field">
+              <label for="yearFilter">Year</label>
+              <select id="yearFilter"></select>
+            </div>
+            <div class="field">
+              <label for="personFilter">Person</label>
+              <select id="personFilter" multiple size="6"></select>
+            </div>
+            <div class="field">
+              <label for="cityFilter">City</label>
+              <select id="cityFilter"></select>
+            </div>
+            <div class="field">
+              <label for="eventFilter">Event</label>
+              <select id="eventFilter"></select>
+            </div>
+            <div class="filter-actions">
+              <button id="clearFilters" class="pill ghost small">Clear</button>
+            </div>
+          </div>
+        </details>
+
+        <div class="section compact-list">
+          <div class="section-title">Matching posts</div>
+          <div id="postList" class="list droppable" data-type="source"></div>
+        </div>
+      </aside>
+
+      <section class="builder-workspace glass">
+        <div class="builder-head">
+          <div>
+            <div class="eyebrow">Slides</div>
+            <h2>Construct your slideshow</h2>
+            <p class="lead">Drag posts into the stack, reorder freely, then play fullscreen. Captions come from the closest text in each post.</p>
+          </div>
+          <div class="builder-actions">
+            <button id="playBtn" class="pill primary">Play fullscreen</button>
+            <button id="clearSelection" class="pill ghost">Clear selection</button>
+          </div>
+        </div>
+        <div id="selection" class="selection droppable" data-type="target">
+          <div class="empty">Drag posts here to build your show.</div>
+        </div>
+      </section>
+      <section class="music-box glass">
+        <div class="music-head">
+          <div>
+            <div class="eyebrow">Soundtrack</div>
+            <h3>Play music with your slideshow</h3>
+            <p class="lead">Pick one of the loaded tracks and we’ll loop it while the show runs.</p>
+          </div>
+          <div class="music-actions">
+            <button id="musicSample" class="pill ghost" disabled>Sample track (10s)</button>
+            <div class="music-status" id="musicStatus">Select a track to use as soundtrack.</div>
+          </div>
+        </div>
+        <div id="musicResults" class="music-results list"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="overlay" class="overlay hidden">
+    <div class="overlay-content glass">
+      <div class="overlay-controls">
+        <button id="closeOverlay" class="pill ghost">Close</button>
+        <div class="overlay-title" id="overlayTitle">Slideshow</div>
+        <label class="speed-control">
+          <span>Speed</span>
+          <input id="speedControl" type="range" min="2000" max="10000" step="500" value="5000">
+          <span id="speedValue">5.0s</span>
+        </label>
+        <div class="overlay-dots" id="overlayDots"></div>
+      </div>
+      <div class="overlay-frame">
+        <img id="overlayImage" alt="Slide">
+        <div class="overlay-caption" id="overlayCaption"></div>
+      </div>
+      <div class="overlay-nav">
+        <button id="prevSlide" class="pill ghost">Prev</button>
+        <button id="nextSlide" class="pill ghost">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./slideshow.js"></script>
+</body>
+</html>

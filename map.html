@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Explorer — Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="page">
+    <header class="top-bar glass">
+      <div class="brand">
+        <div class="brand-mark">ME</div>
+        <div>
+          <div class="eyebrow">Family Blog</div>
+          <div class="title">Memory Explorer · Map</div>
+        </div>
+      </div>
+      <div class="search-row">
+        <div class="metric small">
+          <div class="metric-value" id="locationCount">0</div>
+          <div class="metric-label">Locations</div>
+        </div>
+        <div class="metric small">
+          <div class="metric-value" id="postCount">0</div>
+          <div class="metric-label">Posts</div>
+        </div>
+        <div class="metric small">
+          <div class="metric-value" id="countryCount">0</div>
+          <div class="metric-label">Countries</div>
+        </div>
+        <a class="pill ghost" href="./index.html">&#127968; Home</a>
+      </div>
+    </header>
+
+    <main class="map-layout glass">
+      <aside class="map-sidebar">
+        <div class="section">
+          <div class="section-title">Explore by location</div>
+          <div id="locationList" class="location-list">Loading…</div>
+        </div>
+      </aside>
+      <section class="map-shell">
+        <div id="map" class="map"></div>
+        <div id="mapStatus" class="map-status glass">Loading locations…</div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./vendor/leaflet/leaflet.js"></script>
+  <script type="module" src="./map.js"></script>
+</body>
+</html>
