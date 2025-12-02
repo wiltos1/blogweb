@@ -54,8 +54,17 @@
               <label for="eventFilter">Event</label>
               <select id="eventFilter"></select>
             </div>
+            <div class="field">
+              <label for="customFilterSelect">Custom filters</label>
+              <div class="inline-actions">
+                <select id="customFilterSelect"></select>
+                <button id="applyCustomFilter" class="pill ghost small">Apply</button>
+              </div>
+              <div id="customFilterMeta" class="form-hint"></div>
+            </div>
             <div class="filter-actions">
               <button id="clearFilters" class="pill ghost small">Clear</button>
+              <a class="pill ghost small" href="./custom-filters.html">Custom filters</a>
             </div>
           </div>
         </details>

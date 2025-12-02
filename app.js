@@ -18,7 +18,11 @@ const state = {
     favoritesOnly: false,
   },
   bookmarks: new Set(),
+  customFilters: [],
+  customFilter: null,
 };
+
+const CUSTOM_FILTER_KEY = 'memoryExplorer.customFilters.v1';
 
 let els = {};
 
@@ -35,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     cityFilter: document.getElementById('cityFilter'),
     eventFilter: document.getElementById('eventFilter'),
     clearFilters: document.getElementById('clearFilters'),
+    customFilterSelect: document.getElementById('customFilterSelect'),
+    applyCustomFilter: document.getElementById('applyCustomFilter'),
+    customFilterMeta: document.getElementById('customFilterMeta'),
     quickViewGrid: document.getElementById('quickViewGrid'),
     timelineView: document.getElementById('timelineView'),
     postTitle: document.getElementById('postTitle'),
@@ -68,6 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
     backTopDetail: document.getElementById('backTopDetail'),
   };
 
+  window.addEventListener('storage', loadCustomFilters);
+  window.addEventListener('focus', loadCustomFilters);
+
   const missing = Object.entries(els)
     .filter(([, el]) => !el)
     .map(([key]) => key);
@@ -83,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function init() {
   parseQueryParams();
   loadBookmarks();
+  loadCustomFilters();
   bindEvents();
   await loadPosts();
   hydrateFilters();
@@ -181,6 +192,10 @@ function bindEvents() {
     applyFilters();
   });
 
+  on(els.applyCustomFilter, 'click', () => {
+    applyCustomFilterByName(els.customFilterSelect.value);
+  });
+
   on(els.prevSlide, 'click', () => showSlide(state.slideIndex - 1));
   on(els.nextSlide, 'click', () => showSlide(state.slideIndex + 1));
 }
@@ -251,13 +266,17 @@ function fillSelect(selectEl, items, labelAll = null, multi = false) {
 
 function applyFilters() {
   state.quickViewLimit = 60;
-  const { search, year, persons, city, event, favoritesOnly } = state.filter;
+  const { search, favoritesOnly } = state.filter;
+  const criteria = buildActiveCriteria();
   state.filtered = state.posts.filter((post) => {
     const matchesSearch = !search || buildSearchString(post).includes(search);
-    const matchesYear = year === 'all' || (post.date || '').startsWith(year);
-    const matchesCity = city === 'all' || post.location_city === city;
-    const matchesEvent = event === 'all' || (post.events || []).includes(event);
-    const matchesPersons = !persons.length || persons.every((p) => (post.people || []).includes(p));
+    const matchesYear =
+      !criteria.years.length || criteria.years.some((yr) => (post.date || '').startsWith(yr));
+    const matchesCity = !criteria.cities.length || criteria.cities.includes(post.location_city);
+    const matchesEvent =
+      !criteria.events.length || (post.events || []).some((e) => criteria.events.includes(e));
+    const matchesPersons =
+      !criteria.persons.length || criteria.persons.every((p) => (post.people || []).includes(p));
     const matchesFavorite = !favoritesOnly || state.bookmarks.has(post.url);
     return matchesSearch && matchesYear && matchesCity && matchesEvent && matchesPersons && matchesFavorite;
   });
@@ -272,6 +291,28 @@ function applyFilters() {
     state.activePost = state.filtered[0];
     renderPost();
   }
+}
+
+function buildActiveCriteria() {
+  const cf = state.customFilter;
+  const years = cf?.years?.filter(Boolean) || [];
+  const cities = cf?.cities?.filter(Boolean) || [];
+  const events = cf?.events?.filter(Boolean) || [];
+  const persons = cf?.people?.filter(Boolean) || [];
+
+  if (!cf) {
+    if (state.filter.year !== 'all') years.push(state.filter.year);
+    if (state.filter.city !== 'all') cities.push(state.filter.city);
+    if (state.filter.event !== 'all') events.push(state.filter.event);
+    if (state.filter.persons?.length) persons.push(...state.filter.persons);
+  }
+
+  return {
+    years,
+    cities,
+    events,
+    persons,
+  };
 }
 
 function renderQuickView() {
@@ -558,6 +599,7 @@ function buildSearchString(post) {
 
 function resetFilters() {
   state.filter = { search: '', year: 'all', persons: [], city: 'all', event: 'all', favoritesOnly: false };
+  state.customFilter = null;
   els.searchInput.value = '';
   els.yearFilter.value = 'all';
   els.cityFilter.value = 'all';
@@ -568,6 +610,8 @@ function resetFilters() {
   els.quickViewGrid.classList.remove('hidden');
   els.timelineView.classList.add('hidden');
   els.bookmarkFilter.textContent = 'Show favorites';
+  if (els.customFilterSelect) els.customFilterSelect.value = '';
+  updateCustomFilterMeta();
 }
 
 function loadBookmarks() {
@@ -660,6 +704,83 @@ function updateMapBackButton() {
   } else {
     els.mapBackBtn.classList.add('hidden');
     els.mapBackBtnBottom.classList.add('hidden');
+  }
+}
+
+function loadCustomFilters() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_FILTER_KEY);
+    state.customFilters = raw ? JSON.parse(raw) : [];
+  } catch {
+    state.customFilters = [];
+  }
+  renderCustomFilterOptions();
+}
+
+function renderCustomFilterOptions() {
+  if (!els.customFilterSelect) return;
+  const previous = els.customFilterSelect.value;
+  els.customFilterSelect.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = state.customFilters.length ? 'Select a custom filter' : 'No custom filters saved';
+  els.customFilterSelect.appendChild(placeholder);
+  state.customFilters.forEach((f) => {
+    const opt = document.createElement('option');
+    opt.value = f.name;
+    opt.textContent = f.name;
+    els.customFilterSelect.appendChild(opt);
+  });
+  if (previous) {
+    const stillExists = state.customFilters.find((f) => f.name === previous);
+    if (stillExists) els.customFilterSelect.value = previous;
+  }
+  updateCustomFilterMeta();
+}
+
+function describeFilter(filter) {
+  const parts = [];
+  if (filter.people?.length) parts.push(`${filter.people.length} people`);
+  if (filter.events?.length) parts.push(`${filter.events.length} events`);
+  if (filter.cities?.length) parts.push(`${filter.cities.length} cities`);
+  if (filter.years?.length) parts.push(`${filter.years.length} years`);
+  return parts.join(' • ') || 'No criteria';
+}
+
+function applyCustomFilterByName(name) {
+  if (!name) {
+    state.customFilter = null;
+    if (els.customFilterSelect) els.customFilterSelect.value = '';
+    updateCustomFilterMeta();
+    applyFilters();
+    return;
+  }
+  const filter = state.customFilters.find((f) => f.name.toLowerCase() === name.toLowerCase());
+  if (!filter) {
+    updateCustomFilterMeta('Custom filter not found.');
+    return;
+  }
+  state.customFilter = filter;
+  // Reset basic controls so UI doesn't conflict with custom filter criteria.
+  state.filter = { ...state.filter, year: 'all', city: 'all', event: 'all', persons: [] };
+  if (els.yearFilter) els.yearFilter.value = 'all';
+  if (els.cityFilter) els.cityFilter.value = 'all';
+  if (els.eventFilter) els.eventFilter.value = 'all';
+  if (els.personFilter) Array.from(els.personFilter.options).forEach((opt) => (opt.selected = false));
+  updateCustomFilterMeta();
+  applyFilters();
+}
+
+function updateCustomFilterMeta(message) {
+  if (!els.customFilterMeta) return;
+  if (message !== undefined) {
+    els.customFilterMeta.textContent = message;
+    return;
+  }
+  if (state.customFilter) {
+    els.customFilterMeta.textContent = `Using: ${state.customFilter.name} (${describeFilter(state.customFilter)})`;
+  } else {
+    els.customFilterMeta.textContent = 'No custom filter applied.';
   }
 }
 

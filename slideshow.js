@@ -29,6 +29,8 @@ const TRACKS = [
 const state = {
   posts: [],
   filtered: [],
+  search: '',
+  persons: [],
   selected: [],
   slides: [],
   slideIndex: 0,
@@ -42,7 +44,11 @@ const state = {
   audioReady: false,
   selectedTrack: null,
   sampleTimer: null,
+  customFilters: [],
+  customFilter: null,
 };
+
+const CUSTOM_FILTER_KEY = 'memoryExplorer.customFilters.v1';
 
 let els = {};
 
@@ -54,6 +60,9 @@ document.addEventListener("DOMContentLoaded", () => {
   cityFilter: document.getElementById('cityFilter'),
   eventFilter: document.getElementById('eventFilter'),
   clearFilters: document.getElementById('clearFilters'),
+  customFilterSelect: document.getElementById('customFilterSelect'),
+  applyCustomFilter: document.getElementById('applyCustomFilter'),
+  customFilterMeta: document.getElementById('customFilterMeta'),
   addAllBtn: document.getElementById('addAllBtn'),
   addRandomBtn: document.getElementById('addRandomBtn'),
   postList: document.getElementById('postList'),
@@ -75,6 +84,9 @@ document.addEventListener("DOMContentLoaded", () => {
     nextSlide: document.getElementById('nextSlide'),
   };
 
+  window.addEventListener('storage', loadCustomFilters);
+  window.addEventListener('focus', loadCustomFilters);
+
   init();
 });
 
@@ -82,6 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function init() {
   bindEvents();
+  loadCustomFilters();
   await loadPosts();
   hydrateFilters();
   applyFilters();
@@ -103,6 +116,9 @@ function bindEvents() {
     resetFilters();
     applyFilters();
   });
+  if (els.applyCustomFilter) {
+    els.applyCustomFilter.addEventListener('click', () => applyCustomFilterByName(els.customFilterSelect.value));
+  }
   els.addAllBtn.addEventListener('click', addAllToSelection);
   els.addRandomBtn.addEventListener('click', addRandomToSelection);
   els.playBtn.addEventListener('click', playSlideshow);
@@ -174,20 +190,117 @@ function fillSelect(selectEl, items, labelAll = null, multi = false) {
 
 function applyFilters() {
   const search = state.search || '';
-  const year = els.yearFilter.value;
-  const city = els.cityFilter.value;
-  const eventVal = els.eventFilter.value;
-  const persons = state.persons || [];
+  const criteria = buildActiveCriteria();
   state.filtered = state.posts.filter((post) => {
     const matchesSearch = !search || buildSearchString(post).includes(search);
-    const matchesYear = year === 'all' || (post.date || '').startsWith(year);
-    const matchesCity = city === 'all' || post.location_city === city;
-    const matchesEvent = eventVal === 'all' || (post.events || []).includes(eventVal);
-    const matchesPersons = !persons.length || persons.every((p) => (post.people || []).includes(p));
+    const matchesYear =
+      !criteria.years.length || criteria.years.some((yr) => (post.date || '').startsWith(yr));
+    const matchesCity = !criteria.cities.length || criteria.cities.includes(post.location_city);
+    const matchesEvent =
+      !criteria.events.length || (post.events || []).some((e) => criteria.events.includes(e));
+    const matchesPersons =
+      !criteria.persons.length || criteria.persons.every((p) => (post.people || []).includes(p));
     return matchesSearch && matchesYear && matchesCity && matchesEvent && matchesPersons;
   });
   renderList();
   updateAddAllState();
+}
+
+function buildActiveCriteria() {
+  const cf = state.customFilter;
+  const years = cf?.years?.filter(Boolean) || [];
+  const cities = cf?.cities?.filter(Boolean) || [];
+  const events = cf?.events?.filter(Boolean) || [];
+  const persons = cf?.people?.filter(Boolean) || [];
+
+  if (!cf) {
+    const yearVal = els.yearFilter?.value;
+    const cityVal = els.cityFilter?.value;
+    const eventVal = els.eventFilter?.value;
+    if (yearVal && yearVal !== 'all') years.push(yearVal);
+    if (cityVal && cityVal !== 'all') cities.push(cityVal);
+    if (eventVal && eventVal !== 'all') events.push(eventVal);
+    if (state.persons?.length) persons.push(...state.persons);
+  }
+
+  return { years, cities, events, persons };
+}
+
+function loadCustomFilters() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_FILTER_KEY);
+    state.customFilters = raw ? JSON.parse(raw) : [];
+  } catch {
+    state.customFilters = [];
+  }
+  renderCustomFilterOptions();
+}
+
+function renderCustomFilterOptions() {
+  if (!els.customFilterSelect) return;
+  const previous = els.customFilterSelect.value;
+  els.customFilterSelect.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = state.customFilters.length ? 'Select a custom filter' : 'No custom filters saved';
+  els.customFilterSelect.appendChild(placeholder);
+  state.customFilters.forEach((f) => {
+    const opt = document.createElement('option');
+    opt.value = f.name;
+    opt.textContent = f.name;
+    els.customFilterSelect.appendChild(opt);
+  });
+  if (previous) {
+    const stillExists = state.customFilters.find((f) => f.name === previous);
+    if (stillExists) els.customFilterSelect.value = previous;
+  }
+  updateCustomFilterMeta();
+}
+
+function describeFilter(filter) {
+  const parts = [];
+  if (filter.people?.length) parts.push(`${filter.people.length} people`);
+  if (filter.events?.length) parts.push(`${filter.events.length} events`);
+  if (filter.cities?.length) parts.push(`${filter.cities.length} cities`);
+  if (filter.years?.length) parts.push(`${filter.years.length} years`);
+  return parts.join(' • ') || 'No criteria';
+}
+
+function applyCustomFilterByName(name) {
+  if (!name) {
+    state.customFilter = null;
+    if (els.customFilterSelect) els.customFilterSelect.value = '';
+    updateCustomFilterMeta();
+    applyFilters();
+    return;
+  }
+  const filter = state.customFilters.find((f) => f.name.toLowerCase() === name.toLowerCase());
+  if (!filter) {
+    updateCustomFilterMeta('Custom filter not found.');
+    return;
+  }
+  state.customFilter = filter;
+  // Reset UI filters to prevent conflicts.
+  if (els.yearFilter) els.yearFilter.value = 'all';
+  if (els.cityFilter) els.cityFilter.value = 'all';
+  if (els.eventFilter) els.eventFilter.value = 'all';
+  if (els.personFilter) Array.from(els.personFilter.options).forEach((o) => (o.selected = false));
+  state.persons = [];
+  updateCustomFilterMeta();
+  applyFilters();
+}
+
+function updateCustomFilterMeta(message) {
+  if (!els.customFilterMeta) return;
+  if (message !== undefined) {
+    els.customFilterMeta.textContent = message;
+    return;
+  }
+  if (state.customFilter) {
+    els.customFilterMeta.textContent = `Using: ${state.customFilter.name} (${describeFilter(state.customFilter)})`;
+  } else {
+    els.customFilterMeta.textContent = 'No custom filter applied.';
+  }
 }
 
 function renderList() {
@@ -426,11 +539,14 @@ function buildSearchString(post) {
 function resetFilters() {
   state.search = '';
   state.persons = [];
+  state.customFilter = null;
   els.searchInput.value = '';
   els.yearFilter.value = 'all';
   els.cityFilter.value = 'all';
   els.eventFilter.value = 'all';
   Array.from(els.personFilter.options).forEach((o) => (o.selected = false));
+  if (els.customFilterSelect) els.customFilterSelect.value = '';
+  updateCustomFilterMeta();
 }
 
 function requestFullscreen(el) {

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Explorer - Custom Filters</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="page custom-filter-page">
+    <header class="top-bar glass">
+      <div class="brand">
+        <div class="brand-mark">ME</div>
+        <div>
+          <div class="eyebrow">Family Blog</div>
+          <div class="title">Custom Filters</div>
+        </div>
+      </div>
+      <div class="search-row">
+        <a class="pill ghost" href="./index.html">&#127968; Home</a>
+        <a class="pill ghost" href="./slideshow.html">Slideshow</a>
+        <a class="pill ghost" href="./map.html">Map</a>
+      </div>
+    </header>
+
+    <main class="custom-filters-shell glass">
+      <section class="custom-card">
+        <div class="section-title">Create a custom filter</div>
+        <div class="field">
+          <label for="filterName">Filter name</label>
+          <input id="filterName" type="text" placeholder="e.g. Summer trips with Anna">
+        </div>
+        <div class="grid two-up">
+          <div class="field">
+            <label for="yearSelect">Years (pick any)</label>
+            <select id="yearSelect" multiple size="6"></select>
+          </div>
+          <div class="field">
+            <label for="eventSelect">Events (pick any)</label>
+            <select id="eventSelect" multiple size="6"></select>
+          </div>
+          <div class="field">
+            <label for="personSelect">People (pick any)</label>
+            <select id="personSelect" multiple size="8"></select>
+          </div>
+          <div class="field">
+            <label for="citySelect">Cities (pick any)</label>
+            <select id="citySelect" multiple size="8"></select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button id="saveFilter" class="pill primary">Save custom filter</button>
+          <div id="saveStatus" class="form-hint"></div>
+        </div>
+      </section>
+
+      <section class="custom-card">
+        <div class="section-title">Saved filters</div>
+        <div id="savedList" class="saved-filters"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./custom-filters.js"></script>
+</body>
+</html>
