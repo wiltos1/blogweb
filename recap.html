@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WB+ Yearly Recap</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="page recap-page">
+    <header class="top-bar glass">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="./favicon.png" alt="Wilton Blog logo">
+        </div>
+        <div>
+          <div class="eyebrow">Wilton Blog</div>
+          <div class="title">Yearly Recap Studio</div>
+        </div>
+      </div>
+      <div class="search-row">
+        <a class="pill ghost" href="./index.html">🏠Home</a>
+      </div>
+      <div id="recapStatus" class="form-hint"></div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar glass">
+        <div class="section">
+          <div class="section-title">Recap Settings</div>
+          <div class="field">
+            <label for="recapYear">Year</label>
+            <select id="recapYear"></select>
+          </div>
+          <div class="field">
+            <label for="imageCount">Moments to feature</label>
+            <input id="imageCount" class="ai-count-input" type="number" min="3" max="20" value="8">
+          </div>
+          <div class="field">
+            <label class="switch">
+              <input id="useArchive" type="checkbox">
+              <span class="slider"></span>
+              <span class="switch-label">Use full archive context</span>
+            </label>
+          </div>
+          <div class="filter-actions">
+            <button id="generateRecap" class="pill primary">Generate recap</button>
+            <button id="clearRecap" class="pill ghost">Clear</button>
+          </div>
+          <div id="recapHint" class="form-hint">Select a year to begin.</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Year Snapshot</div>
+          <div class="metrics recap-metrics">
+            <div class="metric small">
+              <div class="metric-value" id="yearPostCount">0</div>
+              <div class="metric-label">Posts</div>
+            </div>
+            <div class="metric small">
+              <div class="metric-value" id="yearImageCount">0</div>
+              <div class="metric-label">Photos</div>
+            </div>
+            <div class="metric small">
+              <div class="metric-value" id="yearPeopleCount">0</div>
+              <div class="metric-label">People</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <section class="hero glass">
+          <div>
+            <div class="eyebrow">AI Powered Yearly Recap</div>
+            <h1>Turn a year into a story</h1>
+            <p class="lead">Pick a year, select how many photos you want to see and let AI generate a summary of all the fun stuff we got up to that year.</p>
+          </div>
+        </section>
+
+        <section id="recapOutput" class="post-detail glass hidden">
+          <div class="post-header">
+            <div>
+              <div class="eyebrow" id="recapDate"></div>
+              <h2 id="recapTitle">Yearly Recap</h2>
+              <div class="tag-row" id="recapTags"></div>
+            </div>
+          </div>
+          <div id="recapContent" class="post-content"></div>
+        </section>
+
+        <section id="recapEmpty" class="glass empty">Generate a recap to see it here.</section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="./recap.js"></script>
+</body>
+</html>

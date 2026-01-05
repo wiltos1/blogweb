@@ -223,15 +223,59 @@ async function loadPosts() {
       }
     }
     if (!data) throw new Error('posts_full.json not reachable');
-    state.posts = data.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    state.filtered = [...state.posts];
-    els.postCount.textContent = state.posts.length.toLocaleString();
-    els.peopleCount.textContent = countUnique(state.posts.flatMap((p) => p.people || []));
-    els.cityCount.textContent = countUnique(state.posts.map((p) => p.location_city).filter(Boolean));
+    applyLoadedPosts(data);
   } catch (err) {
     console.error(err);
     showToast('Failed to load posts_full.json');
+    if (window.location.protocol === 'file:') {
+      showLocalPostsLoader();
+    }
   }
+}
+
+function applyLoadedPosts(data) {
+  if (!Array.isArray(data)) throw new Error('posts_full.json is not an array');
+  state.posts = data.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  state.filtered = [...state.posts];
+  els.postCount.textContent = state.posts.length.toLocaleString();
+  els.peopleCount.textContent = countUnique(state.posts.flatMap((p) => p.people || []));
+  els.cityCount.textContent = countUnique(state.posts.map((p) => p.location_city).filter(Boolean));
+}
+
+function showLocalPostsLoader() {
+  if (!els.aiStatus) return;
+  els.aiStatus.innerHTML = '';
+  const text = document.createElement('span');
+  text.textContent = 'Blocked from reading posts_full.json over file:// ';
+  const button = document.createElement('button');
+  button.className = 'pill ghost';
+  button.textContent = 'Load local posts';
+  button.addEventListener('click', openLocalPostsPicker);
+  els.aiStatus.appendChild(text);
+  els.aiStatus.appendChild(button);
+}
+
+function openLocalPostsPicker() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json';
+  input.addEventListener('change', async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      applyLoadedPosts(data);
+      hydrateFilters();
+      applyFilters();
+      setAiStatus('');
+      showToast('Loaded posts from local file.');
+    } catch (err) {
+      console.error(err);
+      setAiStatus('Failed to read posts_full.json. Check the file format.');
+    }
+  });
+  input.click();
 }
 
 function hydrateFilters() {

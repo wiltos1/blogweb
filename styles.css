@@ -308,6 +308,7 @@ select[multiple]::-webkit-scrollbar-thumb {
   gap: 14px;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .hero h1 {
@@ -328,6 +329,12 @@ select[multiple]::-webkit-scrollbar-thumb {
   margin-top: 10px;
 }
 
+.hero-note-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
 .filter-select {
   display: flex;
   flex-direction: column;
@@ -338,9 +345,14 @@ select[multiple]::-webkit-scrollbar-thumb {
   display: grid;
   grid-template-columns: repeat(3, minmax(90px, 1fr));
   gap: 12px;
+  position: relative;
+  padding-top: 36px;
 }
 .metric.small {
   min-width: 120px;
+}
+.recap-metrics {
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
 }
 
 .metric {
@@ -820,6 +832,14 @@ select[multiple]::-webkit-scrollbar-thumb {
   .top-bar, .hero {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .hero-note-btn {
+    position: static;
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+  .metrics {
+    padding-top: 0;
   }
   .search-row {
     width: 100%;
