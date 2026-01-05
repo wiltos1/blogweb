@@ -88,7 +88,8 @@ async function plotMap(locations) {
 
   const entries = Array.from(locations.values());
   els.mapStatus.classList.remove('hidden');
-  els.mapStatus.textContent = `Geocoding ${entries.length} locations...`;
+  els.mapStatus.textContent = 'Loading locations...';
+  els.mapStatus.style.display = 'block';
   const coords = await geocodeAll(entries, 2);
 
   const markers = [];
@@ -108,7 +109,7 @@ async function plotMap(locations) {
     const group = L.featureGroup(markers);
     map.fitBounds(group.getBounds().pad(0.2));
     els.mapStatus.classList.add('hidden');
-    els.mapStatus.remove?.();
+    els.mapStatus.style.display = 'none';
   } else {
     els.mapStatus.textContent = 'No mappable locations';
   }

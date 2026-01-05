@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Memory Explorer — Slideshow Builder</title>
+  <title>WB+ Slideshow Builder</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,7 +14,9 @@
   <div class="page slideshow-page">
     <header class="top-bar glass">
       <div class="brand">
-        <div class="brand-mark">W</div>
+        <div class="brand-mark">
+          <img src="./favicon.png" alt="Wilton Blog logo">
+        </div>
         <div>
           <div class="eyebrow">Wilton Blog</div>
           <div class="title">Slideshow Builder</div>
@@ -29,7 +32,7 @@
           <button id="aiSearchBtn" class="pill primary small">AI search</button>
         </div>
         <a class="pill ghost" href="./index.html">&#127968; Home</a>
-        <a class="pill ghost" href="./map.html">Map</a>
+        <a class="pill ghost" href="./map.html">🗺️ Map</a>
       </div>
       <div id="aiStatus" class="form-hint"></div>
     </header>
@@ -84,8 +87,8 @@
         <div class="builder-head">
           <div>
             <div class="eyebrow">Slides</div>
-            <h2>Construct your slideshow</h2>
-            <p class="lead">Drag posts into the stack, reorder freely, then play fullscreen. Captions come from the closest text in each post.</p>
+            <h2>Custom Slideshow Builder</h2>
+            <p class="lead">Build custom slideshows by dragging posts into the buildspace. Filter or Search for specific posts. Select music to play as your slideshow loops.</p>
           </div>
           <div class="builder-actions">
             <button id="playBtn" class="pill primary">Play fullscreen</button>
@@ -126,6 +129,7 @@
         <div class="overlay-dots" id="overlayDots"></div>
       </div>
       <div class="overlay-frame">
+        <div class="overlay-post-info" id="overlayPostInfo"></div>
         <img id="overlayImage" alt="Slide">
         <div class="overlay-caption" id="overlayCaption"></div>
       </div>

@@ -493,11 +493,10 @@ function renderPost() {
 
   updateBookmarkButton();
   updateMapBackButton();
-  state.slideData = buildSlides(post);
+  state.slideData = [];
   state.slideIndex = 0;
-  buildDots();
-  showSlide(0, true);
-  els.slideshow.classList.toggle('hidden', !state.slideData.length);
+  els.slideDots.innerHTML = '';
+  els.slideshow.classList.add('hidden');
 }
 
 function buildSlides(post) {

@@ -83,6 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay: document.getElementById('overlay'),
     overlayImage: document.getElementById('overlayImage'),
     overlayCaption: document.getElementById('overlayCaption'),
+    overlayPostInfo: document.getElementById('overlayPostInfo'),
     overlayTitle: document.getElementById('overlayTitle'),
     overlayDots: document.getElementById('overlayDots'),
     closeOverlay: document.getElementById('closeOverlay'),
@@ -593,7 +594,12 @@ function buildSlides() {
     post.content_blocks.forEach((block) => {
       if (block.type === 'text') lastText = block.content;
       if (block.type === 'image') {
-        slides.push({ url: upgradeResolution(block.url), caption: lastText || post.title });
+        slides.push({
+          url: upgradeResolution(block.url),
+          caption: lastText || post.title,
+          postTitle: post.title,
+          postDate: post.date,
+        });
       }
     });
   });
@@ -649,6 +655,10 @@ function showSlide(index, silent = false) {
   state.loadingImage = true;
   els.overlayCaption.textContent = '';
   els.overlayTitle.textContent = `Slide ${safe + 1} / ${state.slides.length}`;
+  if (els.overlayPostInfo) {
+    const infoParts = [slide.postTitle, slide.postDate].filter(Boolean);
+    els.overlayPostInfo.textContent = infoParts.join(' • ');
+  }
   enhanceCurrentImage(slide.url);
   // warm the cache for the upcoming slide to reduce visible load time
   if (safe + 1 < state.slides.length) {
@@ -737,11 +747,15 @@ function showReplay() {
 function renderMusicResults() {
   if (!els.musicResults) return;
   els.musicResults.innerHTML = '';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'music-columns';
   ['Non-vocal', 'Vocal'].forEach((category) => {
+    const column = document.createElement('div');
+    column.className = 'music-column';
     const label = document.createElement('div');
     label.className = 'music-section-label';
     label.textContent = category;
-    els.musicResults.appendChild(label);
+    column.appendChild(label);
     TRACKS.filter((t) => t.category === category).forEach((track) => {
       const row = document.createElement('div');
       row.className = 'music-result';
@@ -758,9 +772,11 @@ function renderMusicResults() {
       `;
       row.querySelector('button').addEventListener('click', () => toggleTrack(track));
       row.addEventListener('dblclick', () => toggleTrack(track));
-      els.musicResults.appendChild(row);
+      column.appendChild(row);
     });
+    wrapper.appendChild(column);
   });
+  els.musicResults.appendChild(wrapper);
   updateMusicControls();
 }
 
